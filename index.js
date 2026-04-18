@@ -15,7 +15,7 @@ module.exports = function (app) {
       rtspUrl: {
         type: 'string',
         title: 'RTSP Stream URL',
-        default: 'rtsp://539:582@192.168.8.100:8554/ch1',
+        default: 'rtsp://user:password@192.168.1.100:554/stream',
       },
       ffmpegImage: {
         type: 'string',
@@ -49,7 +49,7 @@ module.exports = function (app) {
   }
 
   async function asyncStart (options) {
-    const rtspUrl = options.rtspUrl     || 'rtsp://539:582@192.168.8.100:8554/ch1'
+    const rtspUrl = options.rtspUrl     || 'rtsp://user:password@192.168.1.100:554/stream'
     const image   = options.ffmpegImage || 'linuxserver/ffmpeg'
     const tag     = options.ffmpegTag   || 'latest'
 
