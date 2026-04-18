@@ -3,9 +3,33 @@
   "version": "1.0.0",
   "description": "SignalK plugin to display an RTSP stream via HLS using signalk-container",
   "main": "index.js",
-  "keywords": ["signalk-node-server-plugin", "signalk-webapp"],
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-webapp",
+    "rtsp",
+    "hls",
+    "video",
+    "camera",
+    "ffmpeg"
+  ],
+  "author": "Jean-Laurent Girod",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/macjl/signalk-rtsp-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/macjl/signalk-rtsp-plugin/issues"
+  },
+  "homepage": "https://github.com/macjl/signalk-rtsp-plugin#readme",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "signalk-plugin-enabled-by-default": false,
   "peerDependencies": {
-    "signalk-container": ">=0.1.0"
+    "signalk-container": ">=0.2.0"
   }
 }
