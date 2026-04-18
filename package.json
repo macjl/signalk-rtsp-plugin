@@ -1,0 +1,11 @@
+{
+  "name": "signalk-rtsp-plugin",
+  "version": "1.0.0",
+  "description": "SignalK plugin to display an RTSP stream via HLS using signalk-container",
+  "main": "index.js",
+  "keywords": ["signalk-node-server-plugin", "signalk-webapp"],
+  "signalk-plugin-enabled-by-default": false,
+  "peerDependencies": {
+    "signalk-container": ">=0.1.0"
+  }
+}
