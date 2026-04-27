@@ -90,6 +90,11 @@ module.exports = function (app) {
 
     app.debug('Waiting for signalk-container manager…')
     const mgr = await waitForManager()
+
+    if (typeof mgr.resolveContainerAddress !== 'function') {
+      throw new Error('signalk-container >= 0.2.1 is required — please update it in Plugin Config')
+    }
+
     app.debug('Container manager ready, starting ffmpeg…')
 
     await mgr.ensureRunning('rtsp-to-fmp4', {
