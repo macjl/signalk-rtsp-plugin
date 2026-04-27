@@ -43,24 +43,6 @@ Then enable the plugin in **Signal K Admin UI → Plugin Config → RTSP Stream 
 
 The player is available at `/plugins/signalk-rtsp-plugin/player` once FFmpeg has connected to the RTSP source (usually within a few seconds).
 
-## Docker Compose
-
-A ready-to-use `docker-compose.yml` is included for running Signal K with the plugin pre-mounted:
-
-```bash
-git clone https://github.com/macjl/signalk-rtsp-plugin
-cd signalk-rtsp-plugin
-docker compose up -d
-```
-
-Signal K will be available at `http://localhost:3000`. The plugin will appear in the app store and can be enabled from the admin UI.
-
-> [!note]
-> The compose file mounts the Docker socket into the Signal K container so that
-> signalk-container can manage the FFmpeg sibling container. See the
-> [signalk-container README](https://github.com/dirkwa/signalk-container#running-signal-k-in-a-container)
-> for the security implications.
-
 ## How it works
 
 ```
