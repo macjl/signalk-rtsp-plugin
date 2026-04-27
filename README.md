@@ -1,22 +1,25 @@
 # signalk-rtsp-plugin
 
-A [Signal K](https://signalk.org) plugin that streams an RTSP camera feed to the Signal K web UI via HLS.
+A [Signal K](https://signalk.org) plugin that streams an RTSP camera feed to the Signal K web UI via fragmented MP4 (fmp4) over HTTP.
 
-It relies on [signalk-container](https://github.com/dirkwa/signalk-container) to spin up an FFmpeg container that handles the RTSP → HLS transcoding, keeping the plugin itself lightweight and free of native dependencies.
+It relies on [signalk-container](https://github.com/dirkwa/signalk-container) to spin up an FFmpeg container that handles the RTSP → fmp4 conversion. No disk I/O, no HLS segments, no native dependencies — just a live HTTP stream piped straight to the browser's native MediaSource API.
 
 ## Features
 
-- **Live video in the Signal K UI** — embedded HLS player accessible at `/signalk-rtsp-plugin/`
+- **Live video in the Signal K UI** — native fmp4 player accessible at `/plugins/signalk-rtsp-plugin/player`, listed as a webapp in the Signal K dashboard
 - **RTSP authentication** — Basic and Digest (credentials in the stream URL)
-- **Zero-config volume sharing** — FFmpeg writes directly into the Signal K data volume; no host paths or extra volumes to configure
-- **Works everywhere** — bare-metal Signal K, Docker, Podman (rootless or root)
-- **Auto-reconnect** — the player retries automatically on stream loss
+- **Zero-config networking** — signalk-container automatically handles the network topology between Signal K and the FFmpeg container (user-defined Docker network, host network, or bare-metal)
+- **No disk I/O** — FFmpeg streams directly over HTTP; no HLS segments, no shared volumes
+- **No native dependencies** — uses the global `fetch()` and `Buffer` available in Node.js ≥ 18; no `require()` calls
+- **Multi-client** — the plugin fans out the fmp4 stream to all connected browsers; late-joining clients receive the init segment so decoding starts immediately
+- **Auto-reconnect** — both the plugin-to-FFmpeg connection and the browser player retry automatically on stream loss
 
 ## Requirements
 
-- [signalk-container](https://github.com/dirkwa/signalk-container) >= 0.2.0 installed and enabled
+- [signalk-container](https://github.com/dirkwa/signalk-container) >= 0.2.1 installed and enabled
 - Docker or Podman available on the host
 - An RTSP source (IP camera, NVR, etc.)
+- Node.js >= 18 (standard with current Signal K releases)
 
 ## Installation
 
@@ -34,10 +37,11 @@ Then enable the plugin in **Signal K Admin UI → Plugin Config → RTSP Stream 
 | Setting | Default | Description |
 | --- | --- | --- |
 | RTSP Stream URL | `rtsp://user:password@192.168.1.100:554/stream` | Full RTSP URL including credentials if required |
-| FFmpeg Docker image | `linuxserver/ffmpeg` | Docker image used for transcoding |
+| FFmpeg Docker image | `linuxserver/ffmpeg` | Docker image used for the RTSP → fmp4 conversion |
 | FFmpeg Docker image tag | `latest` | Image tag |
+| MSE video codec string | `avc1.64001F` | Passed to `MediaSource.addSourceBuffer()`. `avc1.64001F` = H.264 High 3.1, which covers most IP cameras. Adjust if your camera uses a different profile. |
 
-The stream is served at `/signalk-rtsp-plugin/` once FFmpeg has started and produced its first HLS segments (usually within a few seconds).
+The player is available at `/plugins/signalk-rtsp-plugin/player` once FFmpeg has connected to the RTSP source (usually within a few seconds).
 
 ## Docker Compose
 
@@ -60,18 +64,19 @@ Signal K will be available at `http://localhost:3000`. The plugin will appear in
 ## How it works
 
 ```
-IP camera ──RTSP──▶ FFmpeg container ──HLS──▶ Signal K data volume
-                                                      │
-                                         Express route /hls/:file
-                                                      │
-                                               Browser player
+IP camera ──RTSP──▶ FFmpeg container ──fmp4/HTTP──▶ Plugin connectLoop()
+                    (http -listen 1)                       │
+                                               broadcast() to all clients
+                                                           │
+                                              Browser MediaSource API player
 ```
 
-1. On startup the plugin creates `<dataDir>/rtsp-hls/` inside the Signal K data volume
-2. It asks signalk-container to run an FFmpeg container with the Signal K data volume mounted (via `signalkDataMount`) — no host path needed
-3. FFmpeg reads the RTSP stream over TCP and writes HLS segments to `<dataDir>/rtsp-hls/`
-4. A lightweight Express route serves the segments at `/signalk-rtsp-plugin/hls/:file`
-5. The embedded HLS.js player polls the manifest and renders the live feed
+1. On startup the plugin asks signalk-container to run an FFmpeg container.
+   `signalkAccessiblePorts` tells signalk-container that Signal K needs to connect back to port 8090 inside that container — the network topology (Docker network, host network, bare-metal) is resolved automatically.
+2. FFmpeg reads the RTSP stream over TCP and serves a fragmented MP4 (`-f mp4 -movflags frag_keyframe+empty_moov+default_base_moof`) over an HTTP endpoint (`-listen 1`).
+3. The plugin's `connectLoop()` fetches the fmp4 stream with the global `fetch()` and fans it out to all connected browser clients via chunked HTTP responses.
+4. The first ISO BMFF boxes (up to the first `moof`) are cached as the *init segment* and sent to any browser that connects after the stream has started, so decoding begins immediately.
+5. The embedded player uses the browser-native **MediaSource API** (`addSourceBuffer` in `sequence` mode) — no hls.js or any other JavaScript library required.
 
 ## License
 
