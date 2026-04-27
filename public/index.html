@@ -1,66 +1,8 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RTSP Viewer — SignalK</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #111; color: #eee; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-    h1 { font-size: 1rem; margin-bottom: 1rem; opacity: 0.7; letter-spacing: 0.1em; text-transform: uppercase; }
-    video { max-width: 100%; background: #000; border: 1px solid #333; }
-    #status { margin-top: 0.75rem; font-size: 0.8rem; opacity: 0.5; }
-    #status.error { color: #f66; opacity: 1; }
-    #status.ok { color: #6f6; opacity: 1; }
-  </style>
+<meta charset="utf-8">
+<meta http-equiv="refresh" content="0; url=/plugins/signalk-rtsp-plugin/player">
 </head>
-<body>
-  <h1>RTSP Stream Viewer</h1>
-  <video id="video" autoplay muted playsinline controls width="1280" height="720"></video>
-  <p id="status">Chargement...</p>
-
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-  <script>
-    const video = document.getElementById('video')
-    const statusEl = document.getElementById('status')
-    const hlsUrl = '/signalk-rtsp-plugin/hls/stream.m3u8'
-
-    function setStatus (msg, type = '') {
-      statusEl.textContent = msg
-      statusEl.className = type
-    }
-
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        lowLatencyMode: false,
-        maxBufferLength: 10,
-        liveSyncDurationCount: 2,
-      })
-
-      hls.loadSource(hlsUrl)
-      hls.attachMedia(video)
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setStatus('Streaming', 'ok')
-        video.play()
-      })
-
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) {
-          setStatus(`Erreur : ${data.details}`, 'error')
-          setTimeout(() => { hls.loadSource(hlsUrl); hls.startLoad() }, 3000)
-        }
-      })
-
-      setStatus('Connexion au flux HLS...')
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari — HLS natif
-      video.src = hlsUrl
-      video.addEventListener('loadedmetadata', () => setStatus('Streaming', 'ok'))
-      video.addEventListener('error', () => setStatus('Erreur de lecture', 'error'))
-    } else {
-      setStatus('HLS non supporté par ce navigateur.', 'error')
-    }
-  </script>
-</body>
+<body>Redirecting to player…</body>
 </html>
