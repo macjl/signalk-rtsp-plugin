@@ -66,6 +66,7 @@ module.exports = function (app) {
     router.get('/stream', (req, res) => {
       res.setHeader('Content-Type', 'video/mp4')
       res.setHeader('Cache-Control', 'no-cache, no-store')
+      res.flushHeaders()   // bypass any compression/buffering middleware
       if (initSegment) res.write(initSegment)
       clients.add(res)
       app.debug(`fmp4 client connected (${clients.size} total)`)
